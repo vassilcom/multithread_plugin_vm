@@ -30,10 +30,8 @@ import pybindings
 import time
 print("py src1 init")
 def onFrame(scriptOp):
-	#if scriptOp.keep_going:
-	print("py scriptOp.keep_going")
-	time.sleep(1.2)
-	#r = requests.get("http://en.cppreference.com/w/")
+	time.sleep(0.5)
+	print("hallo from py 1")
 )";
 
 static char src2[1024 * 20] =R"(
@@ -79,7 +77,7 @@ int main()
 
     GLuint my_image_texture = 0;
     
-	if (ph.myVec3D && ph.myVec3D->is)
+	if (ph.myVec3D)
 		imagedata_to_gpu(ph.myVec3D->flttend3D, &my_image_texture, ph.myVec3D->cols, ph.myVec3D->rows);
 	else
 	{
@@ -90,7 +88,7 @@ int main()
 
     while (my_win.loop())
     {
-		if (ph.myVec3D && ph.myVec3D->is)
+		if (ph.myVec3D)
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ph.myVec3D->cols, ph.myVec3D->rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, ph.myVec3D->flttend3D);
 		else
 			std::cout << " NO myVec3D->is \n";
@@ -99,15 +97,12 @@ int main()
         my_win.pre_render();
 
 
-        bool show_demo_window = true;
-        ImGui::ShowDemoWindow(&show_demo_window);
+        // bool show_demo_window = true;
+        // ImGui::ShowDemoWindow(&show_demo_window);
 
-	    ImGui::SetNextWindowPos({ 20, 350}, ImGuiCond_FirstUseEver);
-	    ImGui::SetNextWindowSize({ 700,350 }, ImGuiCond_FirstUseEver);
-
-
-
-        if(ImGui::Begin("python loop code"))
+	    ImGui::SetNextWindowPos({ 520, 10}, ImGuiCond_FirstUseEver);
+	    ImGui::SetNextWindowSize({ 748,532 }, ImGuiCond_FirstUseEver);
+        if(ImGui::Begin("plugin 2"))
         {
 
 			ImGuiIO& io = ImGui::GetIO();
@@ -122,7 +117,7 @@ int main()
 			else
 				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0.2, 0.2, 1.0));
 
-            if(ImGui::InputTextMultiline("##source", src2, IM_ARRAYSIZE(src2), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 25),ImGuiInputTextFlags_AllowTabInput))
+            if(ImGui::InputTextMultiline("##source", src2, IM_ARRAYSIZE(src2), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 30),ImGuiInputTextFlags_AllowTabInput))
             {
 				//py_rebuild();
 				ph.replace_module_with_script2(src2,1);
@@ -132,11 +127,32 @@ int main()
         }
         ImGui::End();
         
+		ImGui::SetNextWindowPos({ 14,476}, ImGuiCond_FirstUseEver);
+	    ImGui::SetNextWindowSize({ 338,226}, ImGuiCond_FirstUseEver);
+        if(ImGui::Begin("plugin 1"))
+        {
+
+			ImGuiIO& io = ImGui::GetIO();
+
+			if(ph.error)
+				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2, 0.0, 0.0, 1.0));
+			else
+				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0.2, 0.2, 1.0));
+
+            if(ImGui::InputTextMultiline("##source0", src1, IM_ARRAYSIZE(src1), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 14),ImGuiInputTextFlags_AllowTabInput))
+            {
+				//py_rebuild();
+				ph.replace_module_with_script2(src1,0);
+            }
+
+			ImGui::PopStyleColor();
+        }
+        ImGui::End();
 
         // render frame buffer output image
 	    ImGui::SetNextWindowPos({ 10,10 }, ImGuiCond_FirstUseEver);
-	    ImGui::SetNextWindowSize({ 320,320 }, ImGuiCond_FirstUseEver);
-        if(ImGui::Begin("image output"))
+	    ImGui::SetNextWindowSize({ 500,400 }, ImGuiCond_FirstUseEver);
+        if(ImGui::Begin("plugin 2 output"))
         {
             ImVec2 pos = ImGui::GetWindowPos();
             ImVec2 size = ImGui::GetWindowSize();

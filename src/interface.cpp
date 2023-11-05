@@ -27,6 +27,7 @@ plugin_handler::~plugin_handler()
 	keep_going.store(false);
     for (auto &t : threads)
         t.join();
+	matrix3D_free(myVec3D);
 }
 py::module plugin_handler::import_module_from_string(const char* script, const char* name) {
 	py::gil_scoped_acquire acquire;  // Acquire the GIL
@@ -104,7 +105,6 @@ void plugin_handler::copy3DNumpyArray(pybind11::array_t<double> x)
 		for (pybind11::ssize_t j = 0; j < r.shape(1); j++)
 			for (pybind11::ssize_t k = 0; k < r.shape(2); k++)
 			{
-				myVec3D->entries[i][j][k]= r(i, j, k);
 				myVec3D->flttend3D[n] = (int)r(i, j, k);
 				n++;
 			}	
