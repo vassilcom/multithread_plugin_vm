@@ -7,28 +7,40 @@
 #include <chrono>
 #include <pybind11/embed.h>
 
+
+#include <pybind11/embed.h>
+#include <pybind11/stl.h>
+#include <pybind11/numpy.h>
+
+
+
 namespace py = pybind11;
 using namespace std::chrono_literals;
 
+static bool do_thread_loop = true;
 static char src1[1024 * 20] =R"(
-import requests
+import pybindings
+import time
 print("py src1 init")
 def func(instance):
+	if instance.keep_going:
+		print("py instance.keep_going")
 	print("py src1 func")
-	while instance.keep_going:
-		r = requests.get("http://en.cppreference.com/w/")
+	time.sleep(1.2)
+	#r = requests.get("http://en.cppreference.com/w/")
 )";
 
 static char src2[1024 * 20] =R"(
 import pybindings
+import numpy as np
 import time
 print("py src2 init")
 def func(instance):
+	pic = np.random.randint(0, high=255, size=(6, 6, 4), dtype='uint8')
+	instance.vm_fun(pic)
 	print("py src2 func")
-
-	while instance.keep_going:
-		time.sleep(0.2)
-		instance.callback(42)
+	time.sleep(2.2)
+	instance.callback(42)
 )";
 
 void replace_module_with_script(std::vector<py::module>& moduleVector, const char* script, size_t index) {
@@ -80,6 +92,9 @@ void replace_module_with_script2(std::vector<py::module>& moduleVector, const ch
 		py::exec(script, moduleVector[index].attr("__dict__"));
 }
 
+
+
+
 class __attribute__ ((visibility("hidden"))) plugin_handler {
 public:
     plugin_handler() : keep_going(true) {}
@@ -97,16 +112,20 @@ public:
 
     void async_run()
     {
-        for (int i = 0; i < 10; i++) {
-            for (const auto &m : plugins) {
-                threads.emplace_back([&m, this]() {
-                    /* Required whenever we need to run anything Python. */
-                    py::gil_scoped_acquire gil;
+		// trigger loop for every plugin tread
+        for (const auto &m : plugins) {
+            threads.emplace_back([&m, this]() 
+			{
+				while (do_thread_loop) 
+				{
+					/* Required whenever we need to run anything Python. */
+					py::gil_scoped_acquire gil;
 
-                    m.attr("func")(this);
-                });
-            }
+					m.attr("func")(this);
+				}
+            });
         }
+        
 
         /*
          * We have called all Python code we need to; release GIL.
@@ -114,10 +133,29 @@ public:
          */
         this->nogil = std::make_unique<py::gil_scoped_release>();
     }
+    // void async_run()
+    // {
+    //     for (int i = 0; i < 10; i++) {
+    //         for (const auto &m : plugins) {
+    //             threads.emplace_back([&m, this]() {
+    //                 /* Required whenever we need to run anything Python. */
+    //                 py::gil_scoped_acquire gil;
+
+    //                 m.attr("func")(this);
+    //             });
+    //         }
+    //     }
+
+    //     /*
+    //      * We have called all Python code we need to; release GIL.
+    //      * Is there some py::release_gil() instead of an object?
+    //      */
+    //     this->nogil = std::make_unique<py::gil_scoped_release>();
+    // }
 
     void callback(int data)
     {
-        std::ignore = data;
+        i_out = data;
     }
 
     bool get_stop_token() {
@@ -126,10 +164,37 @@ public:
     ~plugin_handler()
     {
         std::cout << "destructing...\n";
-	keep_going.store(false);
+		keep_going.store(false);
         for (auto &t : threads)
             t.join();
     }
+
+	int i_out;
+	int i_in;
+	bool keep_going2;
+
+	void vm_fun(pybind11::array_t<double> x)
+	{
+		int n = 0;
+		auto r = x.unchecked<3>(); // x must have ndim = 3; can be non-writeable
+		
+		for (pybind11::ssize_t i = 0; i < r.shape(0); i++)
+		{
+			for (pybind11::ssize_t j = 0; j < r.shape(1); j++)
+			{
+				for (pybind11::ssize_t k = 0; k < r.shape(2); k++)
+				{
+					
+					std::cout << (int)r(i, j, k) << "  ";
+					n++;
+				}
+				std::cout << " ... ";			
+			}	
+			std::cout << " ....... ";				
+		}
+		std::cout << " \n";		
+
+	}
 
 private:
     py::scoped_interpreter interp;
@@ -144,7 +209,8 @@ PYBIND11_EMBEDDED_MODULE(pybindings, m)
 {
     py::class_<plugin_handler>(m, "bindings")
 	.def_property_readonly("keep_going", &plugin_handler::get_stop_token)
-        .def("callback", &plugin_handler::callback);
+    .def("callback", &plugin_handler::callback)
+	.def("vm_fun",&plugin_handler::vm_fun);
 }
 
 int main()
@@ -169,6 +235,8 @@ int main()
         //ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg);
         if(ImGui::Begin("python loop code"))
         {
+			ImGui::Checkbox("do_thread_loop",&do_thread_loop);
+
 			ImGuiIO& io = ImGui::GetIO();
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 
@@ -181,6 +249,7 @@ int main()
         my_win.opengl_render();
         my_win.swap_buffers();
 	}
+	do_thread_loop = false;
 
     return 0;
 }
