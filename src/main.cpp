@@ -1,3 +1,4 @@
+#include "win.h"
 #include <atomic>
 #include <memory>
 #include <iostream>
@@ -27,6 +28,25 @@ def func(instance):
 		instance.callback(42)
 )";
 
+void replace_module_with_script(std::vector<py::module>& moduleVector, const char* script, size_t index) {
+    py::gil_scoped_acquire acquire;  // Acquire the GIL
+
+    if (index < moduleVector.size()) {
+        // Create a new Python module from the script
+        PyObject* module = PyImport_AddModule("__temp_module__");
+        PyObject* dict = PyModule_GetDict(module);
+        PyRun_String(script, Py_file_input, dict, dict);
+
+        // Import the temporary module into a Pybind11 module
+        py::module newModule = py::reinterpret_borrow<py::module>(module);
+
+        // Replace the existing module in the vector
+        moduleVector[index] = newModule;
+
+        // Clean up the temporary module
+        Py_DECREF(module);
+    }
+}
 py::module import_module_from_string(const char* script) {
     py::gil_scoped_acquire acquire;  // Acquire the GIL
 
@@ -41,6 +61,20 @@ py::module import_module_from_string(const char* script) {
     // Clean up the temporary module
     Py_DECREF(module);
 	return pyModule;
+}
+
+// altrnative?
+py::module import_module_from_string2(const char* script) {
+    py::gil_scoped_acquire acquire;  // Acquire the GIL
+    // Create a Python module from the script
+    py::module pyModule = py::module::import("__main__");
+	py::exec(script, pyModule.attr("__dict__"));
+	return pyModule;
+}
+void replace_module_with_script2(std::vector<py::module>& moduleVector, const char* script, size_t index) {
+    py::gil_scoped_acquire acquire;  // Acquire the GIL
+    if (index < moduleVector.size())
+		py::exec(script, moduleVector[index].attr("__dict__"));
 }
 
 class __attribute__ ((visibility("hidden"))) plugin_handler {
@@ -112,10 +146,38 @@ PYBIND11_EMBEDDED_MODULE(pybindings, m)
 
 int main()
 {
+    win my_win;
+    my_win.init();
+
     plugin_handler ph;
     ph.load_plugins();
     ph.async_run();
 
+    while (my_win.loop())
+    {
+        my_win.pre_render();
+
+
+        bool show_demo_window = true;
+        ImGui::ShowDemoWindow(&show_demo_window);
+
+	    ImGui::SetNextWindowPos({ 20, 350}, ImGuiCond_FirstUseEver);
+	    ImGui::SetNextWindowSize({ 700,350 }, ImGuiCond_FirstUseEver);
+        //ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg);
+        if(ImGui::Begin("python loop code"))
+        {
+			ImGuiIO& io = ImGui::GetIO();
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+
+        }
+        ImGui::End();
+        //ImGui::PopStyleColor();
+
+
+        my_win.imgui_render();
+        my_win.opengl_render();
+        my_win.swap_buffers();
+	}
     std::this_thread::sleep_for(1s);
 
     return 0;
