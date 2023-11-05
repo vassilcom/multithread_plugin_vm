@@ -12,8 +12,9 @@ using namespace std::chrono_literals;
 
 static char src1[1024 * 20] =R"(
 import requests
-
+print("py src1 init")
 def func(instance):
+	print("py src1 func")
 	while instance.keep_going:
 		r = requests.get("http://en.cppreference.com/w/")
 )";
@@ -21,8 +22,10 @@ def func(instance):
 static char src2[1024 * 20] =R"(
 import pybindings
 import time
-
+print("py src2 init")
 def func(instance):
+	print("py src2 func")
+
 	while instance.keep_going:
 		time.sleep(0.2)
 		instance.callback(42)
@@ -47,11 +50,11 @@ void replace_module_with_script(std::vector<py::module>& moduleVector, const cha
         Py_DECREF(module);
     }
 }
-py::module import_module_from_string(const char* script) {
+py::module import_module_from_string(const char* script, const char* name) {
     py::gil_scoped_acquire acquire;  // Acquire the GIL
 
     // Create a Python module from the script
-    PyObject* module = PyImport_AddModule("__temp_module__");
+    PyObject* module = PyImport_AddModule(name);
     PyObject* dict = PyModule_GetDict(module);
     PyRun_String(script, Py_file_input, dict, dict);
 
@@ -82,8 +85,8 @@ public:
     plugin_handler() : keep_going(true) {}
     void load_plugins()
     {
-        plugins.push_back(import_module_from_string(src1));
-        plugins.push_back(import_module_from_string(src2));
+        plugins.push_back(import_module_from_string(src1,"sr1"));
+        plugins.push_back(import_module_from_string(src2,"sr2"));
         //plugins.push_back(py::module::import("script1"));
         //plugins.push_back(py::module::import("script2"));
         if (plugins.empty())
@@ -178,7 +181,6 @@ int main()
         my_win.opengl_render();
         my_win.swap_buffers();
 	}
-    std::this_thread::sleep_for(1s);
 
     return 0;
 }
