@@ -9,14 +9,49 @@
 namespace py = pybind11;
 using namespace std::chrono_literals;
 
+static char src1[1024 * 20] =R"(
+import requests
+
+def func(instance):
+	while instance.keep_going:
+		r = requests.get("http://en.cppreference.com/w/")
+)";
+
+static char src2[1024 * 20] =R"(
+import pybindings
+import time
+
+def func(instance):
+	while instance.keep_going:
+		time.sleep(0.2)
+		instance.callback(42)
+)";
+
+py::module import_module_from_string(const char* script) {
+    py::gil_scoped_acquire acquire;  // Acquire the GIL
+
+    // Create a Python module from the script
+    PyObject* module = PyImport_AddModule("__temp_module__");
+    PyObject* dict = PyModule_GetDict(module);
+    PyRun_String(script, Py_file_input, dict, dict);
+
+    // Import the temporary module into a Pybind11 module
+    py::module pyModule = py::reinterpret_borrow<py::module>(module);
+
+    // Clean up the temporary module
+    Py_DECREF(module);
+	return pyModule;
+}
+
 class __attribute__ ((visibility("hidden"))) plugin_handler {
 public:
     plugin_handler() : keep_going(true) {}
     void load_plugins()
     {
-        plugins.push_back(py::module::import("script1"));
-        plugins.push_back(py::module::import("script2"));
-
+        plugins.push_back(import_module_from_string(src1));
+        plugins.push_back(import_module_from_string(src2));
+        //plugins.push_back(py::module::import("script1"));
+        //plugins.push_back(py::module::import("script2"));
         if (plugins.empty())
             throw std::runtime_error("no plugins loaded");
 
