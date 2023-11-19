@@ -23,18 +23,36 @@ using namespace std::chrono_literals;
 class my_class
 {
 public:
-	my_class(const py::module vv):mod(vv){}
-	~my_class(){}
+	my_class(const py::module vv);
+	~my_class();
+	void run(pybind11::module &m);
 
+	void copy3DNumpyArray(pybind11::array_t<double> x);
+    //bool get_stop_token() { return keep_going.load();   }
+	bool get_var_bool() { return var_bool; }
+	int get_var_int_1() { return var_int_1; }
+	int get_var_int_2() { return var_int_2;}
 	
 	py::module mod;
 	std::thread * thr;
+	Matrix3D* myVec3D = nullptr;
+	bool do_thread_loop = true;
+
+	int i_out;
+	int i_in;
+	bool var_bool=false;
+	int var_int_1=50;
+	int var_int_2=50;
 private:
+
+
+	bool error = false;
+	//std::atomic_bool keep_going;
 };
 
 class __attribute__ ((visibility("hidden"))) plugin_handler {
 public:
-    plugin_handler() : keep_going(true) {}
+    plugin_handler() {}
     void load_plugins(const char* src1, const char* src2);
     void remove_plugins();
 
@@ -44,33 +62,23 @@ public:
 
     void async_run();
 
-    void callback(int data) {  i_out = data; }
-	void copy3DNumpyArray(pybind11::array_t<double> x);
 
-    bool get_stop_token() { return keep_going.load();   }
-	bool get_var_bool() { return var_bool; }
-	int get_var_int_1() { return var_int_1; }
-	int get_var_int_2() { return var_int_2;}
+
+    //bool get_stop_token() { return keep_going.load();   }
+
 
     ~plugin_handler();
 
-	int i_out;
-	int i_in;
-	bool var_bool=false;
-	int var_int_1=50;
-	int var_int_2=50;
-
-	bool do_thread_loop = true;
-	bool error = false;
 
 	
+	bool error = false;
 
-	Matrix3D* myVec3D = nullptr;
+	void do_thread_loop();
 
+	std::vector<my_class*> plugins;
 private:
     py::scoped_interpreter interp;
-    std::vector<std::thread *> threads;
-    std::vector<my_class*> plugins;
+
     std::unique_ptr<py::gil_scoped_release> nogil;
-    std::atomic_bool keep_going;
+    //std::atomic_bool keep_going;
 };

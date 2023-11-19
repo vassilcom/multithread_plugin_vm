@@ -17,8 +17,9 @@ Matrix3D* matrix3D_create(int row, int col, int chan){
 }
 
 void matrix3D_free(Matrix3D *m) {
+	if(m)
+		free(m->flttend3D);
 
-	free(m->flttend3D);
 	free(m);
 	
 	m = NULL;

@@ -2,13 +2,12 @@
 
 PYBIND11_EMBEDDED_MODULE(pybindings, m)
 {
-    py::class_<plugin_handler>(m, "bindings")
-	.def_property_readonly("keep_going", &plugin_handler::get_stop_token)
-	.def_property_readonly("var_bool", &plugin_handler::get_var_bool)
-	.def_property_readonly("var_int_1", &plugin_handler::get_var_int_1)
-	.def_property_readonly("var_int_2", &plugin_handler::get_var_int_2)
-    .def("callback", &plugin_handler::callback)
-	.def("copy3DNumpyArray",&plugin_handler::copy3DNumpyArray);
+    py::class_<my_class>(m, "bindings")
+	//.def_property_readonly("keep_going", &my_class::get_stop_token)
+	.def_property_readonly("var_bool", &my_class::get_var_bool)
+	.def_property_readonly("var_int_1", &my_class::get_var_int_1)
+	.def_property_readonly("var_int_2", &my_class::get_var_int_2)
+	.def("copy3DNumpyArray",&my_class::copy3DNumpyArray);
 }
 
 void plugin_handler::load_plugins(const char* src1, const char* src2)
@@ -45,14 +44,20 @@ void plugin_handler::remove_plugins()
 plugin_handler::~plugin_handler()
 {
     std::cout << "destructing...\n";
-	keep_going.store(false);
-    for (int i = 0; i < threads.size(); i++)
+	//keep_going.store(false);
+    // for (int i = 0; i < threads.size(); i++)
+	// {
+	// 	threads.at(i)->join();
+	// 	delete threads.at(i);
+	// }
+	for (auto &mm : plugins) 
 	{
-		threads.at(i)->join();
-		delete threads.at(i);
+		mm->thr->join();
+		delete mm->thr;
 	}
+	remove_plugins();
         
-	matrix3D_free(myVec3D);
+	
 }
 py::module plugin_handler::import_module_from_string(const char* script, const char* name) {
 	py::gil_scoped_acquire acquire;  // Acquire the GIL
@@ -89,25 +94,26 @@ void plugin_handler::async_run()
 {
 	// trigger loop for every plugin tread
     for (const auto &mm : plugins) {
-		auto &m = mm->mod;
+		mm->run(mm->mod);
+		//pybind11::module &m = mm->mod;
        // threads.emplace_back(
-		std::thread * vvv = new std::thread([&m, this]() 
-		{
-			while (do_thread_loop) 
-			{
-				/* Required whenever we need to run anything Python. */
-				py::gil_scoped_acquire gil;
-				try 
-				{
-					m.attr("onFrame")(this);
-				}
-				catch (const py::error_already_set& e) 
-				{
-					PyErr_Print();
-				}
-			}
-        });
-		threads.emplace_back(vvv);
+		// mm->thr = new std::thread([&m, mm]() 
+		// {
+		// 	while (mm->do_thread_loop) 
+		// 	{
+		// 		/* Required whenever we need to run anything Python. */
+		// 		py::gil_scoped_acquire gil;
+		// 		try 
+		// 		{
+		// 			m.attr("onFrame")(mm);
+		// 		}
+		// 		catch (const py::error_already_set& e) 
+		// 		{
+		// 			PyErr_Print();
+		// 		}
+		// 	}
+        // });
+		//threads.emplace_back(mm->thr);
     }
     
     /*
@@ -117,7 +123,44 @@ void plugin_handler::async_run()
     this->nogil = std::make_unique<py::gil_scoped_release>();
 }
 
-void plugin_handler::copy3DNumpyArray(pybind11::array_t<double> x)
+void plugin_handler::do_thread_loop()
+{
+	for (const auto &mm : plugins) 
+	{
+		mm->do_thread_loop = false;
+	}
+}
+
+// ___________________________
+
+my_class::my_class(const py::module vv):mod(vv)
+{}
+my_class::~my_class()
+{
+	matrix3D_free(myVec3D);
+}
+
+void my_class::run(pybind11::module &m)
+{
+	thr = new std::thread([&m, this]() 
+	{
+		while (do_thread_loop) 
+		{
+			/* Required whenever we need to run anything Python. */
+			py::gil_scoped_acquire gil;
+			try 
+			{
+				m.attr("onFrame")(this);
+			}
+			catch (const py::error_already_set& e) 
+			{
+				PyErr_Print();
+			}
+		}
+    });
+}
+
+void my_class::copy3DNumpyArray(pybind11::array_t<double> x)
 {
 	int n = 0;
 	auto r = x.unchecked<3>(); // x must have ndim = 3; can be non-writeable
