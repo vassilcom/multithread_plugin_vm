@@ -102,7 +102,7 @@ int main()
 
 	    ImGui::SetNextWindowPos({ 520, 10}, ImGuiCond_FirstUseEver);
 	    ImGui::SetNextWindowSize({ 748,532 }, ImGuiCond_FirstUseEver);
-        if(ImGui::Begin("plugin 2"))
+        if(ImGui::Begin("plugin 1"))
         {
 
 			ImGuiIO& io = ImGui::GetIO();
@@ -112,47 +112,47 @@ int main()
 			ImGui::SliderInt("var_int_1",& ph.plugins[0]->var_int_1, 1,600);
 			ImGui::SliderInt("var_int_2",& ph.plugins[0]->var_int_2, 1,600);
 
-			if(ph.error)
+			if(ph.plugins[0]->error)
 				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2, 0.0, 0.0, 1.0));
 			else
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0.2, 0.2, 1.0));
+				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0.0, 0.0, 0.5));
 
             if(ImGui::InputTextMultiline("##source", src1, IM_ARRAYSIZE(src1), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 30),ImGuiInputTextFlags_AllowTabInput))
             {
 				//py_rebuild();
-				ph.replace_module_with_script2(src1,1);
+				ph.replace_module_with_script2(src1,0);
             }
 
 			ImGui::PopStyleColor();
         }
         ImGui::End();
         
-		// ImGui::SetNextWindowPos({ 14,476}, ImGuiCond_FirstUseEver);
-	    // ImGui::SetNextWindowSize({ 338,226}, ImGuiCond_FirstUseEver);
-        // if(ImGui::Begin("plugin 1"))
-        // {
+		ImGui::SetNextWindowPos({ 14,476}, ImGuiCond_FirstUseEver);
+	    ImGui::SetNextWindowSize({ 338,226}, ImGuiCond_FirstUseEver);
+        if(ImGui::Begin("plugin 2"))
+        {
 
-		// 	ImGuiIO& io = ImGui::GetIO();
+			ImGuiIO& io = ImGui::GetIO();
 
-		// 	if(ph.error)
-		// 		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2, 0.0, 0.0, 1.0));
-		// 	else
-		// 		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0.2, 0.2, 1.0));
+			if(ph.plugins[1]->error)
+				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2, 0.0, 0.0, 1.0));
+			else
+				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0.0, 0.0, 0.5));
 
-        //     if(ImGui::InputTextMultiline("##source0", src1, IM_ARRAYSIZE(src1), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 14),ImGuiInputTextFlags_AllowTabInput))
-        //     {
-		// 		//py_rebuild();
-		// 		ph.replace_module_with_script2(src1,0);
-        //     }
+            if(ImGui::InputTextMultiline("##source0", src2, IM_ARRAYSIZE(src2), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 14),ImGuiInputTextFlags_AllowTabInput))
+            {
+				//py_rebuild();
+				ph.replace_module_with_script2(src2,1);
+            }
 
-		// 	ImGui::PopStyleColor();
-        // }
-        // ImGui::End();
+			ImGui::PopStyleColor();
+        }
+        ImGui::End();
 
         // render frame buffer output image
 	    ImGui::SetNextWindowPos({ 10,10 }, ImGuiCond_FirstUseEver);
 	    ImGui::SetNextWindowSize({ 500,400 }, ImGuiCond_FirstUseEver);
-        if(ImGui::Begin("plugin 2 output"))
+        if(ImGui::Begin("plugin 1 output"))
         {
             ImVec2 pos = ImGui::GetWindowPos();
             ImVec2 size = ImGui::GetWindowSize();
@@ -169,9 +169,8 @@ int main()
         my_win.opengl_render();
         my_win.swap_buffers();
 	}
-	ph.do_thread_loop();
-	
-	//ph.remove_plugins();
+
+	ph.stop_thread_loop();
 
     return 0;
 }

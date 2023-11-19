@@ -1,4 +1,5 @@
 #include "interface.h"
+#include "win.h"
 
 PYBIND11_EMBEDDED_MODULE(pybindings, m)
 {
@@ -44,16 +45,10 @@ void plugin_handler::remove_plugins()
 plugin_handler::~plugin_handler()
 {
     std::cout << "destructing...\n";
-	//keep_going.store(false);
-    // for (int i = 0; i < threads.size(); i++)
-	// {
-	// 	threads.at(i)->join();
-	// 	delete threads.at(i);
-	// }
+	
 	for (auto &mm : plugins) 
 	{
-		mm->thr->join();
-		delete mm->thr;
+		mm->remove_theard();
 	}
 	remove_plugins();
         
@@ -79,12 +74,12 @@ void plugin_handler::replace_module_with_script2(const char* script, size_t inde
 	{
 		try 
 		{
-			error = false;
+			plugins[index]->error = false;
 			py::exec(script, plugins[index]->mod.attr("__dict__"));
 		} 
 		catch (const py::error_already_set& e) 
 		{
-			error = true;
+			plugins[index]->error = true;
 			PyErr_Print();
 		}
 	}
@@ -94,26 +89,7 @@ void plugin_handler::async_run()
 {
 	// trigger loop for every plugin tread
     for (const auto &mm : plugins) {
-		mm->run(mm->mod);
-		//pybind11::module &m = mm->mod;
-       // threads.emplace_back(
-		// mm->thr = new std::thread([&m, mm]() 
-		// {
-		// 	while (mm->do_thread_loop) 
-		// 	{
-		// 		/* Required whenever we need to run anything Python. */
-		// 		py::gil_scoped_acquire gil;
-		// 		try 
-		// 		{
-		// 			m.attr("onFrame")(mm);
-		// 		}
-		// 		catch (const py::error_already_set& e) 
-		// 		{
-		// 			PyErr_Print();
-		// 		}
-		// 	}
-        // });
-		//threads.emplace_back(mm->thr);
+		mm->start_theard();
     }
     
     /*
@@ -123,7 +99,7 @@ void plugin_handler::async_run()
     this->nogil = std::make_unique<py::gil_scoped_release>();
 }
 
-void plugin_handler::do_thread_loop()
+void plugin_handler::stop_thread_loop()
 {
 	for (const auto &mm : plugins) 
 	{
@@ -134,14 +110,18 @@ void plugin_handler::do_thread_loop()
 // ___________________________
 
 my_class::my_class(const py::module vv):mod(vv)
-{}
+{
+
+}
+
 my_class::~my_class()
 {
 	matrix3D_free(myVec3D);
 }
 
-void my_class::run(pybind11::module &m)
+void my_class::start_theard()
 {
+	pybind11::module &m = mod;
 	thr = new std::thread([&m, this]() 
 	{
 		while (do_thread_loop) 
@@ -158,6 +138,18 @@ void my_class::run(pybind11::module &m)
 			}
 		}
     });
+}
+
+void my_class::remove_theard()
+{
+	thr->join();
+	delete thr;
+}
+
+void my_class::render()
+{
+
+
 }
 
 void my_class::copy3DNumpyArray(pybind11::array_t<double> x)

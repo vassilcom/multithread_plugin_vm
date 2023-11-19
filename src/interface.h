@@ -25,7 +25,9 @@ class my_class
 public:
 	my_class(const py::module vv);
 	~my_class();
-	void run(pybind11::module &m);
+	void start_theard();
+	void remove_theard();
+	void render();
 
 	void copy3DNumpyArray(pybind11::array_t<double> x);
     //bool get_stop_token() { return keep_going.load();   }
@@ -43,10 +45,11 @@ public:
 	bool var_bool=false;
 	int var_int_1=50;
 	int var_int_2=50;
+	bool error = false;
 private:
 
 
-	bool error = false;
+	
 	//std::atomic_bool keep_going;
 };
 
@@ -63,17 +66,13 @@ public:
     void async_run();
 
 
-
-    //bool get_stop_token() { return keep_going.load();   }
-
-
     ~plugin_handler();
 
 
 	
-	bool error = false;
+	//bool error = false;
 
-	void do_thread_loop();
+	void stop_thread_loop();
 
 	std::vector<my_class*> plugins;
 private:
