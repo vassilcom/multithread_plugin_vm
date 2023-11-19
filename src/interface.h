@@ -20,12 +20,23 @@ namespace py = pybind11;
 using namespace std::chrono_literals;
 
 
+class my_class
+{
+public:
+	my_class(const py::module vv):mod(vv){}
+	~my_class(){}
 
+	
+	py::module mod;
+	std::thread * thr;
+private:
+};
 
 class __attribute__ ((visibility("hidden"))) plugin_handler {
 public:
     plugin_handler() : keep_going(true) {}
     void load_plugins(const char* src1, const char* src2);
+    void remove_plugins();
 
 	py::module import_module_from_string(const char* script, const char* name);
 
@@ -58,8 +69,8 @@ public:
 
 private:
     py::scoped_interpreter interp;
-    std::vector<std::thread> threads;
-    std::vector<py::module> plugins;
+    std::vector<std::thread *> threads;
+    std::vector<my_class*> plugins;
     std::unique_ptr<py::gil_scoped_release> nogil;
     std::atomic_bool keep_going;
 };

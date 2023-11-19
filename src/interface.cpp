@@ -13,20 +13,45 @@ PYBIND11_EMBEDDED_MODULE(pybindings, m)
 
 void plugin_handler::load_plugins(const char* src1, const char* src2)
 {
-    plugins.push_back(import_module_from_string(src1,"sr1"));
-    plugins.push_back(import_module_from_string(src2,"sr2"));
+	{
+		my_class* mc = new my_class(import_module_from_string(src1,"sr1"));
+		//mc.mod = import_module_from_string(src1,"sr1");
+		plugins.push_back(mc);		
+	}
+	{
+		my_class* mc = new my_class(import_module_from_string(src2,"sr2"));
+		//mc.mod = import_module_from_string(src1,"sr1");
+		plugins.push_back(mc);			
+	}
+   
     //plugins.push_back(py::module::import("script1"));
     //plugins.push_back(py::module::import("script2"));
     if (plugins.empty())
         throw std::runtime_error("no plugins loaded");
     std::cout << "plugins loaded.\n";
 }
+
+void plugin_handler::remove_plugins()
+{
+
+	for (auto & pl : plugins)
+	{
+		py::gil_scoped_acquire acquire;
+		delete pl;
+	}
+	plugins.clear();
+}
+
 plugin_handler::~plugin_handler()
 {
     std::cout << "destructing...\n";
 	keep_going.store(false);
-    for (auto &t : threads)
-        t.join();
+    for (int i = 0; i < threads.size(); i++)
+	{
+		threads.at(i)->join();
+		delete threads.at(i);
+	}
+        
 	matrix3D_free(myVec3D);
 }
 py::module plugin_handler::import_module_from_string(const char* script, const char* name) {
@@ -50,7 +75,7 @@ void plugin_handler::replace_module_with_script2(const char* script, size_t inde
 		try 
 		{
 			error = false;
-			py::exec(script, plugins[index].attr("__dict__"));
+			py::exec(script, plugins[index]->mod.attr("__dict__"));
 		} 
 		catch (const py::error_already_set& e) 
 		{
@@ -63,8 +88,10 @@ void plugin_handler::replace_module_with_script2(const char* script, size_t inde
 void plugin_handler::async_run()
 {
 	// trigger loop for every plugin tread
-    for (const auto &m : plugins) {
-        threads.emplace_back([&m, this]() 
+    for (const auto &mm : plugins) {
+		auto &m = mm->mod;
+       // threads.emplace_back(
+		std::thread * vvv = new std::thread([&m, this]() 
 		{
 			while (do_thread_loop) 
 			{
@@ -73,13 +100,14 @@ void plugin_handler::async_run()
 				try 
 				{
 					m.attr("onFrame")(this);
-				} 
+				}
 				catch (const py::error_already_set& e) 
 				{
 					PyErr_Print();
 				}
 			}
         });
+		threads.emplace_back(vvv);
     }
     
     /*

@@ -170,6 +170,8 @@ int main()
         my_win.swap_buffers();
 	}
 	ph.do_thread_loop = false;
+	
+	ph.remove_plugins();
 
     return 0;
 }
