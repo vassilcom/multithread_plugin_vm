@@ -11,19 +11,11 @@ PYBIND11_EMBEDDED_MODULE(pybindings, m)
 	.def("copy3DNumpyArray",&my_class::copy3DNumpyArray);
 }
 
-void plugin_handler::load_plugins(const std::string &src1, const std::string &src2)
+void plugin_handler::load_plugin(const std::string &src, const std::string &name)
 {
-	{
-		my_class* mc = new my_class(import_module_from_string(src1,"sr1"));
-		//mc.mod = import_module_from_string(src1,"sr1");
-		plugins.push_back(mc);		
-	}
-	{
-		my_class* mc = new my_class(import_module_from_string(src2,"sr2"));
-		//mc.mod = import_module_from_string(src1,"sr1");
-		plugins.push_back(mc);			
-	}
-   
+	my_class* mc = new my_class(src,name);
+	plugins.push_back(mc);		
+	
     //plugins.push_back(py::module::import("script1"));
     //plugins.push_back(py::module::import("script2"));
     if (plugins.empty())
@@ -33,7 +25,6 @@ void plugin_handler::load_plugins(const std::string &src1, const std::string &sr
 
 void plugin_handler::remove_plugins()
 {
-
 	for (auto & pl : plugins)
 	{
 		py::gil_scoped_acquire acquire;
@@ -53,36 +44,6 @@ plugin_handler::~plugin_handler()
 	remove_plugins();
         
 	
-}
-py::module plugin_handler::import_module_from_string(const std::string & script, const std::string & name) {
-	py::gil_scoped_acquire acquire;  // Acquire the GIL
-	// Create a Python module from the script
-	PyObject* module = PyImport_AddModule(name.c_str());
-	PyObject* dict = PyModule_GetDict(module);
-	PyRun_String(script.c_str(), Py_file_input, dict, dict);
-	// Import the temporary module into a Pybind11 module
-	py::module pyModule = py::reinterpret_borrow<py::module>(module);
-	// Clean up the temporary module
-	Py_DECREF(module);
-	return pyModule;
-}
-
-void plugin_handler::replace_module_with_script2(const std::string & script, size_t index) 
-{
-	py::gil_scoped_acquire acquire;  // Acquire the GIL
-	if (index < plugins.size())
-	{
-		try 
-		{
-			plugins[index]->error = false;
-			py::exec(script, plugins[index]->mod.attr("__dict__"));
-		} 
-		catch (const py::error_already_set& e) 
-		{
-			plugins[index]->error = true;
-			PyErr_Print();
-		}
-	}
 }
 
 void plugin_handler::async_run()
@@ -109,9 +70,9 @@ void plugin_handler::stop_thread_loop()
 
 // ___________________________
 
-my_class::my_class(const py::module vv):mod(vv)
+my_class::my_class(const std::string & script, const std::string & name): m_src(script), m_name(name)
 {
-
+	mod = import_module_from_string();
 }
 
 my_class::~my_class()
@@ -139,6 +100,36 @@ void my_class::start_theard()
 		}
     });
 }
+void my_class::replace_module_with_script(const std::string & script) 
+{
+	py::gil_scoped_acquire acquire;  // Acquire the GIL
+	
+	{
+		try 
+		{
+			error = false;
+			py::exec(script, mod.attr("__dict__"));
+		} 
+		catch (const py::error_already_set& e) 
+		{
+			error = true;
+			PyErr_Print();
+		}
+	}
+}
+py::module my_class::import_module_from_string() {
+	py::gil_scoped_acquire acquire;  // Acquire the GIL
+	// Create a Python module from the script
+	PyObject* module = PyImport_AddModule(m_name.c_str());
+	PyObject* dict = PyModule_GetDict(module);
+	PyRun_String(m_src.c_str(), Py_file_input, dict, dict);
+	// Import the temporary module into a Pybind11 module
+	py::module pyModule = py::reinterpret_borrow<py::module>(module);
+	// Clean up the temporary module
+	Py_DECREF(module);
+	return pyModule;
+}
+
 
 void my_class::remove_theard()
 {
@@ -148,7 +139,33 @@ void my_class::remove_theard()
 
 void my_class::render()
 {
+	std::string titl = m_name;
 
+    if(ImGui::Begin(m_name.c_str()))
+    {
+
+		ImGuiIO& io = ImGui::GetIO();
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+
+		ImGui::Checkbox("var_bool", & var_bool);
+		ImGui::SliderInt("var_int_1",& var_int_1, 1,600);
+		ImGui::SliderInt("var_int_2",& var_int_2, 1,600);
+
+		if(error)
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2, 0.0, 0.0, 1.0));
+		else
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0.0, 0.0, 0.5));
+		
+		
+        if(ImGui::InputTextMultiline("##source", &m_src, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 30),ImGuiInputTextFlags_AllowTabInput))
+        {
+			//py_rebuild();
+			replace_module_with_script(m_src);
+        }
+
+		ImGui::PopStyleColor();
+    }
+    ImGui::End();
 
 }
 

@@ -23,11 +23,14 @@ using namespace std::chrono_literals;
 class my_class
 {
 public:
-	my_class(const py::module vv);
+	my_class(const std::string & script, const std::string & name);
 	~my_class();
 	void start_theard();
 	void remove_theard();
 	void render();
+
+	py::module import_module_from_string();
+	void replace_module_with_script(const std::string & script);
 
 	void copy3DNumpyArray(pybind11::array_t<double> x);
     //bool get_stop_token() { return keep_going.load();   }
@@ -46,6 +49,9 @@ public:
 	int var_int_1=50;
 	int var_int_2=50;
 	bool error = false;
+
+	std::string m_src;
+	std::string m_name;
 private:
 
 
@@ -56,12 +62,8 @@ private:
 class __attribute__ ((visibility("hidden"))) plugin_handler {
 public:
     plugin_handler() {}
-    void load_plugins(const std::string &src1, const std::string &src2);
+    void load_plugin(const std::string &src, const std::string &name);
     void remove_plugins();
-
-	py::module import_module_from_string(const std::string & script, const std::string & name);
-
-	void replace_module_with_script2(const std::string & script, size_t index);
 
     void async_run();
 

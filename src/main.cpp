@@ -25,7 +25,7 @@ void imagedata_to_gpu(unsigned char* image_data,  GLuint* out_texture, int image
 }
 
 
-static std::string  src2=R"(
+std::string  src2=R"(
 import pybindings
 import time
 print("py src1 init")
@@ -34,7 +34,7 @@ def onFrame(scriptOp):
 	print("hallo from py 1")
 )";
 
-static std::string src1 =R"(
+std::string src1 =R"(
 import numpy as np
 import cv2
 import pybindings
@@ -72,7 +72,10 @@ int main()
     my_win.init();
 
     plugin_handler ph;
-    ph.load_plugins(src1,src2);
+
+    ph.load_plugin(src1,"src1");
+    ph.load_plugin(src2,"src2");
+
     ph.async_run();
 
     GLuint my_image_texture = 0;
@@ -102,52 +105,17 @@ int main()
 
 	    ImGui::SetNextWindowPos({ 520, 10}, ImGuiCond_FirstUseEver);
 	    ImGui::SetNextWindowSize({ 748,532 }, ImGuiCond_FirstUseEver);
-        if(ImGui::Begin("plugin 1"))
-        {
+		ph.plugins[0]->render();
 
-			ImGuiIO& io = ImGui::GetIO();
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 
-			ImGui::Checkbox("var_bool", & ph.plugins[0]->var_bool);
-			ImGui::SliderInt("var_int_1",& ph.plugins[0]->var_int_1, 1,600);
-			ImGui::SliderInt("var_int_2",& ph.plugins[0]->var_int_2, 1,600);
-
-			if(ph.plugins[0]->error)
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2, 0.0, 0.0, 1.0));
-			else
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0.0, 0.0, 0.5));
-
-            if(ImGui::InputTextMultiline("##source", &src1, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 30),ImGuiInputTextFlags_AllowTabInput))
-            {
-				//py_rebuild();
-				ph.replace_module_with_script2(src1,0);
-            }
-
-			ImGui::PopStyleColor();
-        }
-        ImGui::End();
         
+
 		ImGui::SetNextWindowPos({ 14,476}, ImGuiCond_FirstUseEver);
 	    ImGui::SetNextWindowSize({ 338,226}, ImGuiCond_FirstUseEver);
-        if(ImGui::Begin("plugin 2"))
-        {
+		ph.plugins[1]->render();
 
-			ImGuiIO& io = ImGui::GetIO();
 
-			if(ph.plugins[1]->error)
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2, 0.0, 0.0, 1.0));
-			else
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0.0, 0.0, 0.5));
 
-            if(ImGui::InputTextMultiline("##source0", &src2, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 14),ImGuiInputTextFlags_AllowTabInput))
-            {
-				//py_rebuild();
-				ph.replace_module_with_script2(src2,1);
-            }
-			
-			ImGui::PopStyleColor();
-        }
-        ImGui::End();
 
         // render frame buffer output image
 	    ImGui::SetNextWindowPos({ 10,10 }, ImGuiCond_FirstUseEver);
