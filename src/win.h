@@ -9,6 +9,8 @@
 #define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
+#include <misc/cpp/imgui_stdlib.h>
+
 class win
 {
 private:

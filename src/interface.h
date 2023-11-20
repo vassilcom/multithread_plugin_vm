@@ -56,12 +56,12 @@ private:
 class __attribute__ ((visibility("hidden"))) plugin_handler {
 public:
     plugin_handler() {}
-    void load_plugins(const char* src1, const char* src2);
+    void load_plugins(const std::string &src1, const std::string &src2);
     void remove_plugins();
 
-	py::module import_module_from_string(const char* script, const char* name);
+	py::module import_module_from_string(const std::string & script, const std::string & name);
 
-	void replace_module_with_script2(const char* script, size_t index);
+	void replace_module_with_script2(const std::string & script, size_t index);
 
     void async_run();
 

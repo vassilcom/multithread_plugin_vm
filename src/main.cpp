@@ -25,7 +25,7 @@ void imagedata_to_gpu(unsigned char* image_data,  GLuint* out_texture, int image
 }
 
 
-static char src2[1024 * 20] =R"(
+static std::string  src2=R"(
 import pybindings
 import time
 print("py src1 init")
@@ -34,7 +34,7 @@ def onFrame(scriptOp):
 	print("hallo from py 1")
 )";
 
-static char src1[1024 * 20] =R"(
+static std::string src1 =R"(
 import numpy as np
 import cv2
 import pybindings
@@ -117,7 +117,7 @@ int main()
 			else
 				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0.0, 0.0, 0.5));
 
-            if(ImGui::InputTextMultiline("##source", src1, IM_ARRAYSIZE(src1), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 30),ImGuiInputTextFlags_AllowTabInput))
+            if(ImGui::InputTextMultiline("##source", &src1, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 30),ImGuiInputTextFlags_AllowTabInput))
             {
 				//py_rebuild();
 				ph.replace_module_with_script2(src1,0);
@@ -139,12 +139,12 @@ int main()
 			else
 				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0.0, 0.0, 0.5));
 
-            if(ImGui::InputTextMultiline("##source0", src2, IM_ARRAYSIZE(src2), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 14),ImGuiInputTextFlags_AllowTabInput))
+            if(ImGui::InputTextMultiline("##source0", &src2, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 14),ImGuiInputTextFlags_AllowTabInput))
             {
 				//py_rebuild();
 				ph.replace_module_with_script2(src2,1);
             }
-
+			
 			ImGui::PopStyleColor();
         }
         ImGui::End();

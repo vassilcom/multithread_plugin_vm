@@ -11,7 +11,7 @@ PYBIND11_EMBEDDED_MODULE(pybindings, m)
 	.def("copy3DNumpyArray",&my_class::copy3DNumpyArray);
 }
 
-void plugin_handler::load_plugins(const char* src1, const char* src2)
+void plugin_handler::load_plugins(const std::string &src1, const std::string &src2)
 {
 	{
 		my_class* mc = new my_class(import_module_from_string(src1,"sr1"));
@@ -54,12 +54,12 @@ plugin_handler::~plugin_handler()
         
 	
 }
-py::module plugin_handler::import_module_from_string(const char* script, const char* name) {
+py::module plugin_handler::import_module_from_string(const std::string & script, const std::string & name) {
 	py::gil_scoped_acquire acquire;  // Acquire the GIL
 	// Create a Python module from the script
-	PyObject* module = PyImport_AddModule(name);
+	PyObject* module = PyImport_AddModule(name.c_str());
 	PyObject* dict = PyModule_GetDict(module);
-	PyRun_String(script, Py_file_input, dict, dict);
+	PyRun_String(script.c_str(), Py_file_input, dict, dict);
 	// Import the temporary module into a Pybind11 module
 	py::module pyModule = py::reinterpret_borrow<py::module>(module);
 	// Clean up the temporary module
@@ -67,7 +67,7 @@ py::module plugin_handler::import_module_from_string(const char* script, const c
 	return pyModule;
 }
 
-void plugin_handler::replace_module_with_script2(const char* script, size_t index) 
+void plugin_handler::replace_module_with_script2(const std::string & script, size_t index) 
 {
 	py::gil_scoped_acquire acquire;  // Acquire the GIL
 	if (index < plugins.size())
