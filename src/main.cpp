@@ -6,14 +6,11 @@
 
 std::string  src2=R"(
 import pybindings
-import time
 import numpy as np
 print("py src1 init")
 def onFrame(scriptOp):
 	pic = np.random.randint(0, high=255, size=(scriptOp.var_int_1, scriptOp.var_int_2, 4), dtype='uint8')
 	scriptOp.copy3DNumpyArray(pic)
-	time.sleep(0.1)
-	print("hallo from py 1")
 )";
 
 std::string src1 =R"(
