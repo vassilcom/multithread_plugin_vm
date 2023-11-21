@@ -19,7 +19,7 @@ public:
     win(/* args */);
     ~win();
 
-    int init();
+    int init(int width, int height);
     bool loop();
     void pre_render();
     void imgui_render();

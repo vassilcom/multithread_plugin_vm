@@ -18,6 +18,7 @@ add_executable(${CMAKE_PROJECT_NAME}
     src/interface.cpp	
     src/win.cpp
     src/my_item.cpp
+    src/texture.cpp	
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_demo.cpp
     ${IMGUI_DIR}/imgui_draw.cpp

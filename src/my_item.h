@@ -16,6 +16,8 @@
 
 #include <iostream>
 
+#include "texture.h"
+
 namespace py = pybind11;
 using namespace std::chrono_literals;
 
@@ -27,7 +29,7 @@ public:
 	~my_item();
 	void start_theard();
 	void remove_theard();
-	void render();
+	void render(int tex_id);
 
 	py::module import_module_from_string();
 	void replace_module_with_script(const std::string & script);
@@ -52,6 +54,9 @@ public:
 
 	std::string m_src;
 	std::string m_name;
+
+
+	texture m_texture;
 private:
 
 

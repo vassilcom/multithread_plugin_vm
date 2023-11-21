@@ -70,12 +70,33 @@ void my_item::remove_theard()
 	delete thr;
 }
 
-void my_item::render()
+void my_item::render(int tex_id)
 {
+	if (myVec3D)
+	{
+		m_texture.Bind(tex_id);
+		m_texture.data_to_gpu(myVec3D);
+		m_texture.Unbind();
+	}
+	else
+		std::cout << " NO myVec3D->is \n";
+
+
 	std::string titl = m_name;
 
     if(ImGui::Begin(m_name.c_str()))
     {
+        ImVec2 pos = ImGui::GetWindowPos();
+        ImVec2 size = ImGui::GetWindowSize();
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        drawList->AddImage((void*)(intptr_t)m_texture.m_RendererID,
+            pos,
+            ImVec2(pos.x + size.x, pos.y + size.x*0.7),
+            ImVec2(0, 0),
+            ImVec2(1, 1));
+
+		ImGui::SetCursorPosY(size.x*0.7);
+
 
 		ImGuiIO& io = ImGui::GetIO();
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
@@ -90,7 +111,7 @@ void my_item::render()
 			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0.0, 0.0, 0.5));
 		
 		
-        if(ImGui::InputTextMultiline("##source", &m_src, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 30),ImGuiInputTextFlags_AllowTabInput))
+        if(ImGui::InputTextMultiline("##source", &m_src, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 20),ImGuiInputTextFlags_AllowTabInput))
         {
 			//py_rebuild();
 			replace_module_with_script(m_src);
@@ -120,5 +141,5 @@ void my_item::copy3DNumpyArray(pybind11::array_t<double> x)
 			{
 				myVec3D->flttend3D[n] = (int)r(i, j, k);
 				n++;
-			}	
+			}
 }

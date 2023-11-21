@@ -20,7 +20,7 @@ win::~win()
     glfwTerminate();
 }
 
-int win::init()
+int win::init(int width, int height)
 {
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
@@ -32,7 +32,7 @@ int win::init()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
     // Create window with graphics context
-    window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", nullptr, nullptr);
+    window = glfwCreateWindow(width, height, "Dear ImGui GLFW+OpenGL3 example", nullptr, nullptr);
     if (window == nullptr)
         return 1;
     glfwMakeContextCurrent(window);
