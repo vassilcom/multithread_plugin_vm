@@ -36,6 +36,8 @@ public:
 	bool get_var_bool() { return var_bool; }
 	int get_var_int_1() { return var_int_1; }
 	int get_var_int_2() { return var_int_2;}
+	void set_var_int_1(int v) { var_int_1 = v;}
+	void set_var_int_2(int v) { var_int_2 = v;}
 	void copy3DNumpyArray(pybind11::array_t<double> x);	
 
 
