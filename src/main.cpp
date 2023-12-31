@@ -21,6 +21,8 @@ def onFrame(scriptOp):
 
 int main()
 {
+	plugin_handler::interpreter_py = new t_mxw_python_interpreter_main();
+
 	int w_width = 1200;
 	int w_height = 800;
 
@@ -34,7 +36,7 @@ int main()
 
     ph.async_run();
 
-
+	
 	ImVec2 it_s(w_width / ph.plugins.size(),w_height); 
 
     while (my_win.loop())
@@ -65,7 +67,13 @@ int main()
         my_win.swap_buffers();
 	}
 
+	delete plugin_handler::interpreter_py;
+
+	
+
 	ph.stop_thread_loop();
+
+	
 
     return 0;
 }

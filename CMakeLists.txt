@@ -13,6 +13,7 @@ add_subdirectory(${LIBS_DIR}/glfw)
 add_subdirectory(${LIBS_DIR}/glad)
 
 add_executable(${CMAKE_PROJECT_NAME} 
+    src/mxw_pyproxy_main.cpp
     src/main.cpp
     src/interface.cpp	
     src/win.cpp

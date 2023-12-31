@@ -13,6 +13,13 @@ PYBIND11_EMBEDDED_MODULE(pybindings, m)
 	.def("copyFloat",&my_item::copyFloat);
 }
 
+t_mxw_python_interpreter_main* plugin_handler::interpreter_py = nullptr;
+
+plugin_handler::plugin_handler()
+{
+	
+}
+
 void plugin_handler::load_plugin(const std::string &src, const std::string &name)
 {
 	my_item* mc = new my_item(src,name);
@@ -37,6 +44,7 @@ void plugin_handler::remove_plugins()
 
 plugin_handler::~plugin_handler()
 {
+	
     std::cout << "destructing...\n";
 	
 	for (auto &mm : plugins) 
