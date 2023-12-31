@@ -74,9 +74,7 @@ void my_item::render(int tex_id)
 {
 	if (myVec3D)
 	{
-		m_texture.Bind(tex_id);
-		m_texture.data_to_gpu(myVec3D);
-		m_texture.Unbind();
+ 
 	}
 	else
 		std::cout << " NO myVec3D->is \n";
@@ -89,11 +87,7 @@ void my_item::render(int tex_id)
         ImVec2 pos = ImGui::GetWindowPos();
         ImVec2 size = ImGui::GetWindowSize();
         ImDrawList* drawList = ImGui::GetWindowDrawList();
-        drawList->AddImage((void*)(intptr_t)m_texture.m_RendererID,
-            pos,
-            ImVec2(pos.x + size.x, pos.y + size.x*0.7),
-            ImVec2(0, 0),
-            ImVec2(1, 1));
+ 
 
 		ImGui::SetCursorPosY(size.x*0.7);
 
@@ -123,23 +117,7 @@ void my_item::render(int tex_id)
 
 }
 
-void my_item::copy3DNumpyArray(pybind11::array_t<double> x)
+void my_item::copyFloat(float x)
 {
-	int n = 0;
-	auto r = x.unchecked<3>(); // x must have ndim = 3; can be non-writeable
-	if(myVec3D == nullptr)
-		myVec3D = matrix3D_create(r.shape(0), r.shape(1),r.shape(2)); // row col chan
-	else if(myVec3D->rows != r.shape(0) || myVec3D->cols != r.shape(1))
-	{
-		matrix3D_free(myVec3D);
-		myVec3D = matrix3D_create(r.shape(0), r.shape(1),r.shape(2)); // row col chan
-	}
-	
-	for (pybind11::ssize_t i = 0; i < r.shape(0); i++)
-		for (pybind11::ssize_t j = 0; j < r.shape(1); j++)
-			for (pybind11::ssize_t k = 0; k < r.shape(2); k++)
-			{
-				myVec3D->flttend3D[n] = (int)r(i, j, k);
-				n++;
-			}
+	myVec3D-> v = x;
 }

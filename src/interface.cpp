@@ -10,7 +10,7 @@ PYBIND11_EMBEDDED_MODULE(pybindings, m)
 	.def_property_readonly("var_int_2", &my_item::get_var_int_2)
 	.def("set_var_int_1", &my_item::set_var_int_1)
 	.def("set_var_int_2", &my_item::set_var_int_2)
-	.def("copy3DNumpyArray",&my_item::copy3DNumpyArray);
+	.def("copyFloat",&my_item::copyFloat);
 }
 
 void plugin_handler::load_plugin(const std::string &src, const std::string &name)
