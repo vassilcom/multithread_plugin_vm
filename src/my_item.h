@@ -11,12 +11,11 @@
 #include <pybind11/embed.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
-#include "matrix.h"
+ 
 
 
 #include <iostream>
 
-#include "texture.h"
 
 namespace py = pybind11;
 using namespace std::chrono_literals;
@@ -50,8 +49,7 @@ private:
 
 	py::module mod;
 	std::thread * thr;
-	Matrix3D* myVec3D = nullptr;
-
+ 
 
 	bool var_bool=true;
 	int var_int_1=50;
@@ -60,6 +58,4 @@ private:
 
 	std::string m_src;
 	std::string m_name;
-
-	texture m_texture;
 };

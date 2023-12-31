@@ -9,8 +9,7 @@ my_item::my_item(const std::string & script, const std::string & name): m_src(sc
 }
 
 my_item::~my_item()
-{
-	matrix3D_free(myVec3D);
+{ 
 }
 
 void my_item::start_theard()
@@ -72,13 +71,7 @@ void my_item::remove_theard()
 
 void my_item::render(int tex_id)
 {
-	if (myVec3D)
-	{
  
-	}
-	else
-		std::cout << " NO myVec3D->is \n";
-
 
 	std::string titl = m_name;
 
@@ -119,5 +112,5 @@ void my_item::render(int tex_id)
 
 void my_item::copyFloat(float x)
 {
-	myVec3D-> v = x;
+	 
 }

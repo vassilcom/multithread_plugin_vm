@@ -14,11 +14,9 @@ add_subdirectory(${LIBS_DIR}/glad)
 
 add_executable(${CMAKE_PROJECT_NAME} 
     src/main.cpp
-    src/matrix.cpp	
     src/interface.cpp	
     src/win.cpp
     src/my_item.cpp
-    src/texture.cpp	
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_demo.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
